@@ -51,6 +51,13 @@ export default function RootLayout() {
           name="animais/novo"
           options={{ title: "Cadastrar bovino" }}
         />
+
+        <Stack.Screen
+          name="animal/[id]"
+          options={{
+            title: "Detalhes do bovino"
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

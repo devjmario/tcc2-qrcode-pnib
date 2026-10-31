@@ -1,8 +1,10 @@
-import { useState } from "react";
+
+import { useRef, useState } from "react";
 import {
   View,
   Text,
   Button,
+  Alert,
   StyleSheet
 } from "react-native";
 import {
@@ -11,13 +13,59 @@ import {
 } from "expo-camera";
 import { useRouter } from "expo-router";
 
+import { buscarAnimal } from "@/database/animalRepository";
+
 export default function ScannerScreen() {
   const router = useRouter();
-
   const [permission, requestPermission] =
     useCameraPermissions();
 
-  const [resultado, setResultado] = useState("");
+  const [scanned, setScanned] = useState(false);
+  const scanning = useRef(false);
+
+  function handleQRCode(data: string) {
+    if (scanning.current) return;
+
+    scanning.current = true;
+    setScanned(true);
+
+    if (!data.startsWith("bovino:")) {
+      Alert.alert(
+        "QR Code inválido",
+        "Este código não pertence ao sistema.",
+        [{
+          text: "Tentar novamente",
+          onPress: resetScanner
+        }]
+      );
+      return;
+    }
+
+    const id = data.substring("bovino:".length);
+    const animal = buscarAnimal(id);
+
+    if (!animal) {
+      Alert.alert(
+        "Animal não encontrado",
+        "Este bovino não está cadastrado neste dispositivo.",
+        [{
+          text: "Tentar novamente",
+          onPress: resetScanner
+        }]
+      );
+      return;
+    }
+
+    router.replace({
+      pathname: "/animal/[id]",
+      params: { id: animal.id }
+    });
+  }
+
+  function resetScanner() {
+    scanning.current = false;
+    setScanned(false);
+  }
 
   if (!permission) {
     return (
@@ -44,28 +92,24 @@ export default function ScannerScreen() {
       <CameraView
         style={styles.camera}
         facing="back"
-        active={true}
+        active={!scanned}
         barcodeScannerSettings={{
           barcodeTypes: ["qr"]
         }}
-        onCameraReady={() => {
-          console.log("Câmera inicializada!");
-        }}
-        onMountError={(error) => {
-          console.log("Erro:", error.message);
-        }}
-        onBarcodeScanned={({ data }) => {
-          setResultado(data);
-        }}
+        onBarcodeScanned={
+          scanned
+            ? undefined
+            : ({ data }) => handleQRCode(data)
+        }
       />
 
-      <View style={styles.result}>
-        <Text style={styles.resultText}>
-          {resultado || "Aponte para um QR Code"}
+      <View style={styles.overlay}>
+        <Text style={styles.text}>
+          Aponte a câmera para o QR Code do bovino
         </Text>
 
         <Button
-          title="Voltar ao início"
+          title="Voltar"
           onPress={() => router.back()}
         />
       </View>
@@ -76,29 +120,30 @@ export default function ScannerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: "black"
   },
   camera: {
-    flex: 1,
+    flex: 1
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 20,
+    gap: 20
   },
-  result: {
+  overlay: {
     position: "absolute",
-    bottom: 50,
+    bottom: 40,
     left: 20,
     right: 20,
-    padding: 16,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    borderRadius: 10,
-    gap: 10,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    gap: 15
   },
-  resultText: {
+  text: {
     color: "white",
-    textAlign: "center",
-  },
+    fontSize: 16,
+    textAlign: "center"
+  }
 });

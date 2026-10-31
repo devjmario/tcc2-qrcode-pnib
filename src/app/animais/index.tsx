@@ -4,7 +4,8 @@ import {
   Text,
   FlatList,
   Button,
-  StyleSheet
+  StyleSheet,
+  TouchableOpacity
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 
@@ -38,17 +39,31 @@ export default function AnimaisScreen() {
             Nenhum bovino cadastrado.
           </Text>
         }
+        
         renderItem={({ item }) => (
-          <View style={styles.card}>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+            router.push({
+                pathname: "/animal/[id]",
+                params: { id: item.id }
+            })
+            }
+        >
             <Text style={styles.name}>
-              {item.nome || "Bovino sem nome"}
+            {item.nome || "Bovino sem nome"}
             </Text>
+
             <Text>Identificação: {item.identificacao}</Text>
             <Text>Raça: {item.raca || "Não informada"}</Text>
             <Text>Sexo: {item.sexo}</Text>
-          </View>
+
+            <Text style={{ color: "#2D6A4F", marginTop: 8 }}>
+            Toque para visualizar o QR Code
+            </Text>
+        </TouchableOpacity>
         )}
-      />
+        />
     </View>
   );
 }
