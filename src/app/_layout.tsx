@@ -1,4 +1,3 @@
-
 import {
   DarkTheme,
   DefaultTheme,
@@ -8,14 +7,23 @@ import {
 
 import * as SplashScreen from "expo-splash-screen";
 import { useColorScheme } from "react-native";
+import { useEffect, useState } from "react";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
-import AppTabs from "@/components/app-tabs";
+import { initDatabase } from "@/database/database";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    initDatabase();
+    setDbReady(true);
+  }, []);
+
+  if (!dbReady) return null;
 
   return (
     <ThemeProvider
@@ -26,20 +34,22 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen
           name="index"
-          options={{
-            headerShown: false
-          }}
+          options={{ headerShown: false }}
         />
 
         <Stack.Screen
           name="scanner"
-          options={{
-            title: "Ler QR Code",
-            headerStyle: {
-              backgroundColor: "#1B4332"
-            },
-            headerTintColor: "#FFFFFF"
-          }}
+          options={{ title: "Ler QR Code" }}
+        />
+
+        <Stack.Screen
+          name="animais/index"
+          options={{ title: "Animais cadastrados" }}
+        />
+
+        <Stack.Screen
+          name="animais/novo"
+          options={{ title: "Cadastrar bovino" }}
         />
       </Stack>
     </ThemeProvider>

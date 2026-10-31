@@ -1,4 +1,3 @@
-
 import {
   View,
   Text,
@@ -37,6 +36,14 @@ export default function HomeScreen() {
         >
           <Text style={styles.buttonText}>
             Ler QR Code
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/animais")}
+        >
+          <Text style={styles.buttonText}>
+            Animais cadastrados
           </Text>
         </TouchableOpacity>
       </View>
