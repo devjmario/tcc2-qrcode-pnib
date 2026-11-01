@@ -152,7 +152,36 @@ export default function DetalhesAnimalScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+      <View style={{ gap: 10 }}>
+        <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() =>
+            router.push({
+                pathname: "/eventos/novo",
+                params: { animalId: animal.id }
+            })
+            }
+        >
+            <Text style={styles.saveButtonText}>
+            Registrar evento
+            </Text>
+        </TouchableOpacity>
 
+        <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() =>
+            router.push({
+                pathname: "/eventos/historico",
+                params: { animalId: animal.id }
+            })
+            }
+        >
+            <Text style={styles.saveButtonText}>
+            Histórico de eventos
+            </Text>
+        </TouchableOpacity>
+      </View>
+                
       <Button
         title="Voltar à listagem"
         onPress={() => router.back()}

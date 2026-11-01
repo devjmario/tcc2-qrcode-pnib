@@ -58,6 +58,16 @@ export default function RootLayout() {
             title: "Detalhes do bovino"
           }}
         />
+
+        <Stack.Screen
+          name="eventos/novo"
+          options={{ title: "Registrar evento" }}
+        />
+
+        <Stack.Screen
+          name="eventos/historico"
+          options={{ title: "Histórico do bovino" }}
+        />
       </Stack>
     </ThemeProvider>
   );
