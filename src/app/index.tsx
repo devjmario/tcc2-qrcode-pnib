@@ -6,9 +6,39 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
+import { Alert } from "react-native";
+import { sincronizarDados } from "../services/syncService";
 
 export default function HomeScreen() {
   const router = useRouter();
+
+  const [sincronizando, setSincronizando] = useState(false);
+
+async function executarSincronizacao() {
+  if (sincronizando) return;
+
+  setSincronizando(true);
+
+  try {
+    const resultado = await sincronizarDados();
+
+    Alert.alert(
+      "Sincronização concluída",
+      `Animais enviados: ${resultado.animaisEnviados}\n` +
+      `Eventos enviados: ${resultado.eventosEnviados}`
+    );
+  } catch (error) {
+    Alert.alert(
+      "Falha na sincronização",
+      error instanceof Error
+        ? error.message
+        : "Não foi possível conectar ao servidor."
+    );
+  } finally {
+    setSincronizando(false);
+  }
+}
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,6 +74,20 @@ export default function HomeScreen() {
         >
           <Text style={styles.buttonText}>
             Animais cadastrados
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            sincronizando && { opacity: 0.6 },
+          ]}
+          onPress={executarSincronizacao}
+          disabled={sincronizando}
+        >
+          <Text style={styles.buttonText}>
+            {sincronizando
+              ? "Sincronizando..."
+              : "Sincronizar dados"}
           </Text>
         </TouchableOpacity>
       </View>
