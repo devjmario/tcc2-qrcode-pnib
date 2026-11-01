@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: tcc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rastreabilidade_bovina
+      POSTGRES_USER: tcc_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  postgres_data:
