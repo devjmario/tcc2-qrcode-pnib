@@ -1,5 +1,8 @@
-
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import {
   View,
   Text,
@@ -9,16 +12,18 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
 
 import {
-  Animal,
+  type Animal,
   buscarAnimal,
 } from "@/database/animalRepository";
+
+import { db } from "@/database/database";
 
 export default function DetalhesAnimalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,8 +32,28 @@ export default function DetalhesAnimalScreen() {
   const qrRef = useRef<ViewShot>(null);
   const [exportando, setExportando] = useState(false);
 
-  const [animal] = useState<Animal | null>(() =>
-    typeof id === "string" ? buscarAnimal(id) : null
+  const [animal, setAnimal] = useState<Animal | null>(null);
+  const [propriedadeNome, setPropriedadeNome] =
+    useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (typeof id !== "string") return;
+
+      const encontrado = buscarAnimal(id);
+      setAnimal(encontrado);
+
+      if (encontrado?.propriedade_id) {
+        const propriedade = db.getFirstSync<{ nome: string }>(
+          "SELECT nome FROM propriedades WHERE id = ?",
+          [encontrado.propriedade_id]
+        );
+
+        setPropriedadeNome(propriedade?.nome ?? null);
+      } else {
+        setPropriedadeNome(null);
+      }
+    }, [id])
   );
 
   async function salvarQRCode() {
@@ -82,7 +107,10 @@ export default function DetalhesAnimalScreen() {
     return (
       <View style={styles.container}>
         <Text>Animal não encontrado neste dispositivo.</Text>
-        <Button title="Voltar" onPress={() => router.back()} />
+        <Button
+          title="Voltar"
+          onPress={() => router.back()}
+        />
       </View>
     );
   }
@@ -94,13 +122,26 @@ export default function DetalhesAnimalScreen() {
       </Text>
 
       <View style={styles.card}>
-        <Text>Identificação: {animal.identificacao}</Text>
-        <Text>Raça: {animal.raca || "Não informada"}</Text>
+        <Text>
+          Identificação: {animal.identificacao}
+        </Text>
+
+        <Text>
+          Raça: {animal.raca || "Não informada"}
+        </Text>
+
         <Text>
           Sexo: {animal.sexo === "M" ? "Macho" : "Fêmea"}
         </Text>
+
         <Text>
-          Nascimento: {animal.data_nascimento || "Não informado"}
+          Nascimento:{" "}
+          {animal.data_nascimento || "Não informado"}
+        </Text>
+
+        <Text>
+          Propriedade:{" "}
+          {propriedadeNome || "Não vinculada"}
         </Text>
       </View>
 
@@ -152,36 +193,51 @@ export default function DetalhesAnimalScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-      <View style={{ gap: 10 }}>
+
+      <View style={styles.actions}>
         <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() =>
+          style={styles.saveButton}
+          onPress={() =>
             router.push({
-                pathname: "/eventos/novo",
-                params: { animalId: animal.id }
+              pathname: "/animais/novo",
+              params: { id: animal.id },
             })
-            }
+          }
         >
-            <Text style={styles.saveButtonText}>
-            Registrar evento
-            </Text>
+          <Text style={styles.saveButtonText}>
+            Editar cadastro
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() =>
+          style={styles.saveButton}
+          onPress={() =>
             router.push({
-                pathname: "/eventos/historico",
-                params: { animalId: animal.id }
+              pathname: "/eventos/novo",
+              params: { animalId: animal.id },
             })
-            }
+          }
         >
-            <Text style={styles.saveButtonText}>
-            Histórico de eventos
-            </Text>
+          <Text style={styles.saveButtonText}>
+            Registrar evento
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={() =>
+            router.push({
+              pathname: "/eventos/historico",
+              params: { animalId: animal.id },
+            })
+          }
+        >
+          <Text style={styles.saveButtonText}>
+            Histórico do bovino
+          </Text>
         </TouchableOpacity>
       </View>
-                
+
       <Button
         title="Voltar à listagem"
         onPress={() => router.back()}
@@ -236,6 +292,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
     textAlign: "center",
+  },
+  actions: {
+    gap: 10,
   },
   saveButton: {
     backgroundColor: "#2D6A4F",

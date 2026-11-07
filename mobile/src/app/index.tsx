@@ -22,11 +22,12 @@ async function executarSincronizacao() {
 
   try {
     const resultado = await sincronizarDados();
-
     Alert.alert(
       "Sincronização concluída",
+      `Propriedades enviadas: ${resultado.propriedadesEnviadas}\n` +
       `Animais enviados: ${resultado.animaisEnviados}\n` +
-      `Eventos enviados: ${resultado.eventosEnviados}`
+      `Eventos enviados: ${resultado.eventosEnviados}\n` +
+      `Alterações enviadas: ${resultado.alteracoesEnviadas}`
     );
   } catch (error) {
     Alert.alert(
