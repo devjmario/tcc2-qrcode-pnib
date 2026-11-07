@@ -30,7 +30,47 @@ export function initDatabase() {
       FOREIGN KEY (animal_id) REFERENCES animais(id)
     );
 
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id TEXT PRIMARY KEY NOT NULL,
+      nome TEXT NOT NULL,
+      email TEXT,
+      telefone TEXT,
+      criado_em TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS localizacoes (
+      id TEXT PRIMARY KEY NOT NULL,
+      endereco TEXT,
+      municipio TEXT NOT NULL,
+      uf TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL
+    );
+
+    CREATE TABLE IF NOT EXISTS propriedades (
+      id TEXT PRIMARY KEY NOT NULL,
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id),
+      localizacao_id TEXT REFERENCES localizacoes(id),
+      nome TEXT NOT NULL,
+      codigo_estabelecimento TEXT,
+      criado_em TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS identificacoes (
+      id TEXT PRIMARY KEY NOT NULL,
+      animal_id TEXT NOT NULL REFERENCES animais(id),
+      tipo TEXT NOT NULL CHECK (tipo IN ('QR_INTERNO','OFICIAL_INFORMADO')),
+      codigo TEXT NOT NULL,
+      criado_em TEXT NOT NULL,
+      UNIQUE(animal_id, tipo)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_eventos_animal
     ON eventos(animal_id, data_evento);
   `);
+  
+  const colunas = db.getAllSync<{ name: string }>("PRAGMA table_info(animais)");
+  if (!colunas.some((coluna) => coluna.name === "propriedade_id")) {
+    db.execSync("ALTER TABLE animais ADD COLUMN propriedade_id TEXT REFERENCES propriedades(id)");
+  }
 }

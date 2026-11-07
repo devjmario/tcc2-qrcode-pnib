@@ -76,6 +76,12 @@ async function executarSincronizacao() {
             Animais cadastrados
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/perfil")}>
+          <Text style={styles.buttonText}>Meu perfil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/propriedades")}>
+          <Text style={styles.buttonText}>Minhas propriedades</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.button,
