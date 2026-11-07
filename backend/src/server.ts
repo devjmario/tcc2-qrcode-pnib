@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { pool, testarConexao } from "./db";
+import { registerAuthRoutes, requireAuth } from "./auth";
 
 const app = express();
 
@@ -14,15 +15,18 @@ app.get("/health", async (_req, res) => {
 
     res.json({
       status: "ok",
-      database: "connected"
+      database: "connected",
     });
   } catch {
     res.status(503).json({
       status: "error",
-      database: "disconnected"
+      database: "disconnected",
     });
   }
 });
+
+registerAuthRoutes(app);
+app.use(requireAuth);
 
 app.get("/animais", async (_req, res) => {
   try {
@@ -64,7 +68,7 @@ app.post("/animais", async (req, res) => {
     raca,
     sexo,
     data_nascimento,
-    criado_em
+    criado_em,
   } = req.body;
 
   if (
@@ -94,14 +98,14 @@ app.post("/animais", async (req, res) => {
         raca || null,
         sexo,
         data_nascimento || null,
-        criado_em
+        criado_em,
       ]
     );
 
     if (result.rowCount === 0) {
       res.status(200).json({
         mensagem: "Animal já recebido anteriormente",
-        id
+        id,
       });
       return;
     }
@@ -138,7 +142,7 @@ app.post("/eventos", async (req, res) => {
     descricao,
     peso_kg,
     vacina,
-    criado_em
+    criado_em,
   } = req.body;
 
   if (
@@ -173,14 +177,14 @@ app.post("/eventos", async (req, res) => {
         descricao || null,
         tipo === "PESAGEM" ? peso_kg : null,
         tipo === "VACINACAO" ? vacina.trim() : null,
-        criado_em
+        criado_em,
       ]
     );
 
     if (result.rowCount === 0) {
       res.status(200).json({
         mensagem: "Evento já recebido anteriormente",
-        id
+        id,
       });
       return;
     }
@@ -188,9 +192,7 @@ app.post("/eventos", async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(400).json({
-      erro: "Erro ao cadastrar evento"
-    });
+    res.status(400).json({ erro: "Erro ao cadastrar evento" });
   }
 });
 

@@ -1,6 +1,6 @@
 import { db } from "../database/database";
-
-const API_URL = "http://192.168.3.72:3000";
+import { API_URL } from "./apiConfig";
+import { getSession } from "./authService";
 
 type Registro = Record<string, unknown>;
 
@@ -8,13 +8,23 @@ async function enviar(
   endpoint: string,
   dados: Registro
 ): Promise<void> {
-  const resposta = await fetch(`${API_URL}${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(dados),
-  });
+  const sessao = await getSession();
+
+  if (!sessao) {
+    throw new Error("Faça login para sincronizar.");
+  }
+
+  const resposta = await fetch(
+    `${API_URL}${endpoint}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessao.token}`,
+      },
+      body: JSON.stringify(dados),
+    }
+  );
 
   if (!resposta.ok) {
     const detalhe = await resposta.text();
@@ -29,8 +39,7 @@ export async function sincronizarDados() {
   let animaisEnviados = 0;
   let eventosEnviados = 0;
 
-  // 1. Enviar os animais primeiro, pois os eventos
-  // dependem da existência do animal no PostgreSQL.
+  // Animais precisam existir antes dos eventos.
   const animais = db.getAllSync<Registro>(
     "SELECT * FROM animais"
   );
@@ -40,7 +49,7 @@ export async function sincronizarDados() {
     animaisEnviados++;
   }
 
-  // 2. Enviar apenas eventos ainda não sincronizados.
+  // Enviar somente eventos pendentes.
   const eventos = db.getAllSync<Registro>(
     "SELECT * FROM eventos WHERE sincronizado = 0"
   );
@@ -48,7 +57,6 @@ export async function sincronizarDados() {
   for (const evento of eventos) {
     await enviar("/eventos", evento);
 
-    // Só confirmar localmente após resposta positiva da API.
     db.runSync(
       "UPDATE eventos SET sincronizado = 1 WHERE id = ?",
       [String(evento.id)]

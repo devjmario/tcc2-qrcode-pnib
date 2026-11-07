@@ -1,24 +1,101 @@
-import { useState } from "react";
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
-import { obterUsuario, salvarUsuario } from "../database/cadastroRepository";
+import {
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function PerfilScreen() {
-  const [usuario, setUsuario] = useState(() => obterUsuario());
-  const [nome, setNome] = useState(usuario?.nome ?? "");
-  const [email, setEmail] = useState(usuario?.email ?? "");
-  const [telefone, setTelefone] = useState(usuario?.telefone ?? "");
-  function salvar() {
-    if (!nome.trim()) return Alert.alert("Atenção", "Informe seu nome.");
-    try { salvarUsuario(nome, email, telefone); setUsuario(obterUsuario()); Alert.alert("Perfil", "Dados salvos no dispositivo."); }
-    catch (e) { Alert.alert("Erro", e instanceof Error ? e.message : "Falha ao salvar."); }
+  const { user, signOut } = useAuth();
+
+  function confirmarSaida() {
+    Alert.alert(
+      "Sair",
+      "Deseja encerrar a sessão neste dispositivo?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: () => {
+            void signOut();
+          },
+        },
+      ]
+    );
   }
-  return <SafeAreaView style={styles.container}><ScrollView keyboardShouldPersistTaps="handled">
-    <Text style={styles.title}>Meu perfil</Text>
-    <Text style={styles.label}>Nome *</Text><TextInput style={styles.input} value={nome} onChangeText={setNome} placeholder="Nome completo" />
-    <Text style={styles.label}>E-mail</Text><TextInput style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="email@exemplo.com" />
-    <Text style={styles.label}>Telefone</Text><TextInput style={styles.input} value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" placeholder="(00) 00000-0000" />
-    <TouchableOpacity style={styles.button} onPress={salvar}><Text style={styles.buttonText}>Salvar perfil</Text></TouchableOpacity>
-    <Text style={{ marginTop: 18, color: "#666" }}>Perfil local, sem autenticação. A sincronização de usuários será implementada em uma próxima etapa.</Text>
-  </ScrollView></SafeAreaView>;
+
+  return (
+    <SafeAreaView style={styles.root}>
+      <Text style={styles.title}>Meu perfil</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>Nome</Text>
+        <Text style={styles.value}>{user?.nome}</Text>
+
+        <Text style={styles.label}>E-mail</Text>
+        <Text style={styles.value}>{user?.email}</Text>
+
+        <Text style={styles.note}>
+          Conta autenticada pela API. A sessão permanece
+          disponível offline por até 30 dias.
+          Alteração de perfil ainda não implementada.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={confirmarSaida}
+      >
+        <Text style={styles.buttonText}>Sair da conta</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: "#F5F7F5", padding: 20 }, title: { fontSize: 25, fontWeight: "bold", color: "#1B4332", marginBottom: 18 }, label: { fontSize: 15, marginTop: 12, marginBottom: 5, color: "#1B4332" }, input: { backgroundColor: "white", borderWidth: 1, borderColor: "#CDD7D0", borderRadius: 9, padding: 12 }, button: { backgroundColor: "#2D6A4F", padding: 16, borderRadius: 10, marginTop: 22, alignItems: "center" }, buttonText: { color: "white", fontWeight: "bold", fontSize: 16 } });
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#F5F7F5",
+    padding: 20,
+  },
+  title: {
+    fontSize: 25,
+    fontWeight: "bold",
+    color: "#1B4332",
+    marginBottom: 18,
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+  },
+  label: {
+    color: "#666",
+    marginTop: 8,
+  },
+  value: {
+    fontSize: 17,
+    color: "#1B4332",
+    marginTop: 4,
+  },
+  note: {
+    marginTop: 20,
+    color: "#666",
+    lineHeight: 20,
+  },
+  button: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#2D6A4F",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+});

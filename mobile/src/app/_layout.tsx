@@ -2,7 +2,7 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-  Stack
+  Stack,
 } from "expo-router";
 
 import * as SplashScreen from "expo-splash-screen";
@@ -11,10 +11,23 @@ import { useEffect, useState } from "react";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { initDatabase } from "@/database/database";
+import {
+  AuthProvider,
+  useAuth,
+} from "../contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
+  );
+}
+
+function AppNavigator() {
+  const { user, loading } = useAuth();
   const colorScheme = useColorScheme();
   const [dbReady, setDbReady] = useState(false);
 
@@ -23,54 +36,76 @@ export default function RootLayout() {
     setDbReady(true);
   }, []);
 
-  if (!dbReady) return null;
+  if (!dbReady || loading) return null;
 
   return (
     <ThemeProvider
-      value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+      value={
+        colorScheme === "dark"
+          ? DarkTheme
+          : DefaultTheme
+      }
     >
       <AnimatedSplashOverlay />
 
-      <Stack>
-        <Stack.Screen
-          name="index"
-          options={{ headerShown: false }}
-        />
+      <Stack screenOptions={{ headerBackTitle: "Voltar" }}>
+        <Stack.Protected guard={!user}>
+          <Stack.Screen
+            name="login"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="cadastro"
+            options={{ title: "Criar conta" }}
+          />
+        </Stack.Protected>
 
-        <Stack.Screen name="perfil" options={{ title: "Meu perfil" }} />
-        <Stack.Screen name="propriedades" options={{ title: "Minhas propriedades" }} />
+        <Stack.Protected guard={!!user}>
+          <Stack.Screen
+            name="index"
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="scanner"
-          options={{ title: "Ler QR Code" }}
-        />
+          <Stack.Screen
+            name="perfil"
+            options={{ title: "Meu perfil" }}
+          />
 
-        <Stack.Screen
-          name="animais/index"
-          options={{ title: "Animais cadastrados" }}
-        />
+          <Stack.Screen
+            name="propriedades"
+            options={{ title: "Minhas propriedades" }}
+          />
 
-        <Stack.Screen
-          name="animais/novo"
-          options={{ title: "Cadastrar bovino" }}
-        />
+          <Stack.Screen
+            name="scanner"
+            options={{ title: "Ler QR Code" }}
+          />
 
-        <Stack.Screen
-          name="animal/[id]"
-          options={{
-            title: "Detalhes do bovino"
-          }}
-        />
+          <Stack.Screen
+            name="animais/index"
+            options={{ title: "Animais cadastrados" }}
+          />
 
-        <Stack.Screen
-          name="eventos/novo"
-          options={{ title: "Registrar evento" }}
-        />
+          <Stack.Screen
+            name="animais/novo"
+            options={{ title: "Cadastrar bovino" }}
+          />
 
-        <Stack.Screen
-          name="eventos/historico"
-          options={{ title: "Histórico do bovino" }}
-        />
+          <Stack.Screen
+            name="animal/[id]"
+            options={{ title: "Detalhes do bovino" }}
+          />
+
+          <Stack.Screen
+            name="eventos/novo"
+            options={{ title: "Registrar evento" }}
+          />
+
+          <Stack.Screen
+            name="eventos/historico"
+            options={{ title: "Histórico do bovino" }}
+          />
+        </Stack.Protected>
       </Stack>
     </ThemeProvider>
   );
