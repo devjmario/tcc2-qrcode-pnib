@@ -37,6 +37,9 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
 
+        <Stack.Screen name="perfil" options={{ title: "Meu perfil" }} />
+        <Stack.Screen name="propriedades" options={{ title: "Minhas propriedades" }} />
+
         <Stack.Screen
           name="scanner"
           options={{ title: "Ler QR Code" }}
